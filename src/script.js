@@ -3,8 +3,15 @@ import {
 	OrbitControls
 } from 'three/addons/controls/OrbitControls.js'
 
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js'
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import GUI from 'lil-gui'
 import gsap from 'gsap'
+
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
+
+
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 
 //
 //  Debug GUI
@@ -28,58 +35,18 @@ window.addEventListener('keydown',(event)=>{
 	}
 })
 
-
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
 // Create a Scene
 const scene = new THREE.Scene()
 
-// Create a Mesh
-const boxGeometry = new THREE.BoxGeometry(1, 1, 1,4,4,4)
-var axesHelper = new THREE.AxesHelper()
-scene.add(axesHelper)
-
-const debugObject = {
-	color:  '#33aabb',
-	subdivisions: 2
-}
-
-// Trials related to cube
-
-// Create a pane for gui settings
-//var guiFolder = gui.addFolder('Cube Pane')
-
-// const material = new THREE.MeshBasicMaterial({
-// 	color: debugObject.color,
-// 	wireframe: true
-// })
-// const mesh = new THREE.Mesh(boxGeometry, material)
-// mesh.position.set(1, 1, 1)
-// scene.add(mesh)
-// guiFolder.add(mesh.position,'y').min(0).max(10).step(1).name('Elevation')
-// guiFolder.add(mesh,'visible').name('Visibility')
-// guiFolder.add(mesh.material,'wireframe').name('Wireframe')
-// guiFolder.addColor(debugObject,'color').name('Color').onChange(()=>{
-// 	//console.log(mesh.material.color.getHexString())
-// 	mesh.material.color.set(debugObject.color)
-// })
-
-// guiFolder.add(debugObject,'subdivisions').min(2).max(10).step(1).onFinishChange(()=>{
-// 	mesh.geometry.dispose()
-// 	mesh.geometry = new THREE.BoxGeometry(1,1,1,debugObject.subdivisions,debugObject.subdivisions,debugObject.subdivisions)
-// })
-
-// debugObject.spin = () => {
-// 	gsap.to(mesh.rotation,{y:mesh.rotation.y + Math.PI*2})
-// }
-// guiFolder.add(debugObject,'spin')
-
-
 // Create a Camera
-const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 1000)
-camera.position.set(0, 1, 10)
+const camera = new THREE.PerspectiveCamera(120, window.innerWidth / window.innerHeight, 1, 10000)
+camera.position.set(0, 20, 20)
 scene.add(camera)
+
+
 
 
 // Create a renderer
@@ -141,11 +108,95 @@ controls.update()
 
 
 
+const debugObject = {
+	color:  '#33aabb',
+	subdivisions: 2	
+}
 
+const meshes =[]
+const material = new THREE.MeshBasicMaterial()
+material.color = new THREE.Color(0xff0000)
+material.side = THREE.DoubleSide
+
+//light
+const light = new THREE.AmbientLight(new THREE.Color('white'))
+scene.add(light)
+
+for(var i=0;i<1000;i++)
+{
+	var size = 1/2
+	const mesh = new THREE.Mesh(new THREE.BoxGeometry(size,size,size),material)
+	scene.add(mesh)
+	meshes.push(mesh)
+
+	var full=600
+	var half = full/2
+
+	mesh.position.x = Math.random()*full-half
+	mesh.position.y = Math.random()*full-half
+	mesh.position.z = Math.random()*full-half
+
+	const sphere = new THREE.Mesh(new THREE.BoxGeometry(1/2),material)
+	scene.add(sphere)
+
+	sphere.position.x = Math.random()*full-half
+	sphere.position.y = Math.random()*full-half
+	sphere.position.z = Math.random()*full-half
+	meshes.push(sphere)
+}
+
+/**
+ * Fonts
+ */
+const fontLoader = new FontLoader()
+
+fontLoader.load(
+    '/fonts/helvetiker_bold.typeface.json',
+    (font) =>
+    {
+		
+        const textGeometry = new TextGeometry(
+            'Happy New Year 2024',
+            {
+                font: font,
+                size: 2.5,
+                height: 0.1,
+                curveSegments: 12,
+                bevelEnabled: true,
+                bevelThickness: 0.03,
+                bevelSize: 0.02,
+                bevelOffset: 0,
+                bevelSegments: 5
+            }
+        )
+        
+		textGeometry.center()
+        const text = new THREE.Mesh(textGeometry, material)		
+        scene.add(text)
+    }
+)
+
+
+const clock = new THREE.Clock()
 
 function animate() {
 
 	requestAnimationFrame(animate)
+
+	const elapsedTime = clock.getElapsedTime()
+
+	meshes.forEach(element => {
+		// Update objects
+		element.rotation.x = element.rotation.x+ (Math.random())/30
+		element.rotation.y = element.rotation.y +(Math.random())/30
+		element.rotation.z = element.rotation.z + (Math.random())/30
+	});
+
+	
+	 camera.rotation.x = camera.rotation.x +(Math.random())/2000
+	 camera.rotation.y = camera.rotation.y +(Math.random()-0.5)/2000
+	 camera.rotation.z = camera.rotation.z + (Math.random())/2000
+	 
 	
 	renderer.render(scene, camera)
 }
